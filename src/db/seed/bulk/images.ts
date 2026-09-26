@@ -1,7 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import type { LucideIcon } from 'lucide-react'
-import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
+import type { IconNode } from 'lucide'
 import sharp from 'sharp'
 import type { StoredImage } from '@/features/listings/images'
 import { saveObject } from '@/lib/storage'
@@ -20,10 +18,17 @@ const WEBP_QUALITY = 78
 type Composition = 'centered' | 'detail' | 'pattern'
 const COMPOSITIONS: Composition[] = ['centered', 'detail', 'pattern']
 
-function iconMarkup(icon: LucideIcon, size: number, x: number, y: number, opacity = 1): string {
-  return renderToStaticMarkup(
-    createElement(icon, { size, x, y, color: 'white', strokeWidth: 1.2, opacity }),
-  )
+/** Ikona z lucide (24×24 viewBox) jako vnořené SVG — bez Reactu, ten Next v serverovém kódu nepovolí. */
+function iconMarkup(icon: IconNode, size: number, x: number, y: number, opacity = 1): string {
+  const children = icon
+    .map(([tag, attributes]) => {
+      const attributeText = Object.entries(attributes)
+        .map(([name, value]) => `${name}="${String(value)}"`)
+        .join(' ')
+      return `<${tag} ${attributeText}/>`
+    })
+    .join('')
+  return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">${children}</svg>`
 }
 
 function background(hue: number, random: SeededRandom): string {
@@ -37,7 +42,7 @@ function background(hue: number, random: SeededRandom): string {
   <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bg)"/>`
 }
 
-function compositionSvg(composition: Composition, icon: LucideIcon, random: SeededRandom): string {
+function compositionSvg(composition: Composition, icon: IconNode, random: SeededRandom): string {
   switch (composition) {
     case 'centered': {
       const size = random.integer(380, 460)
@@ -79,7 +84,7 @@ async function renderImage(svg: string): Promise<{ full: Buffer; thumbnail: Buff
 
 /** Vygeneruje a uloží sadu obrázků jednoho inzerátu (první = hlavní kompozice). */
 export async function generateListingImages(
-  icon: LucideIcon,
+  icon: IconNode,
   hue: number,
   count: number,
   random: SeededRandom,

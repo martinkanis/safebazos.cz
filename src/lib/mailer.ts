@@ -4,6 +4,9 @@ import { createLogger } from './logger'
 
 const logger = createLogger('mailer')
 
+/** Port 465 = TLS od začátku spojení; ostatní porty (587, 25) přecházejí na TLS přes STARTTLS. */
+const IMPLICIT_TLS_PORT = 465
+
 let transporter: Transporter | null = null
 
 function getTransporter(): Transporter {
@@ -12,6 +15,7 @@ function getTransporter(): Transporter {
     transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
+      secure: env.SMTP_PORT === IMPLICIT_TLS_PORT,
       auth: env.SMTP_USER ? { user: env.SMTP_USER, pass: env.SMTP_PASSWORD } : undefined,
     })
   }

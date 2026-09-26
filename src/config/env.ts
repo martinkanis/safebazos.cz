@@ -16,10 +16,24 @@ const envSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   MAIL_FROM: z.string().default('SafeBazos <info@safebazos.cz>'),
 
+  /** Lokální úložiště fotek — použije se, když není nastavené S3. */
   STORAGE_DIR: z.string().default('./storage'),
+  /** S3-kompatibilní úložiště (Rock8cloud). Názvy odpovídají klíčům, které exportuje služba bucketu. */
+  S3_ENDPOINT: z.url().optional(),
+  S3_BUCKET: z.string().optional(),
+  S3_REGION: z.string().default('us-east-1'),
+  S3_FORCE_PATH_STYLE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+  S3_ACCESS_KEY: z.string().optional(),
+  S3_SECRET_KEY: z.string().optional(),
 
   ADMIN_EMAIL: z.email().optional(),
   ADMIN_PASSWORD: z.string().min(8).optional(),
+
+  /** Počet generovaných demo inzerátů, které se při startu doplní na pozadí (0 = žádné). */
+  SEED_DEMO_LISTINGS: z.coerce.number().int().min(0).default(0),
 })
 
 export type Env = z.infer<typeof envSchema>

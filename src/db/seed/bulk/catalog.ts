@@ -39,7 +39,6 @@ import {
   Lamp,
   LandPlot,
   Laptop,
-  type LucideIcon,
   Monitor,
   Motorbike,
   Mountain,
@@ -69,7 +68,8 @@ import {
   WashingMachine,
   Watch,
   Wrench,
-} from 'lucide-react'
+  type IconNode,
+} from 'lucide'
 
 /** Textové šablony pro generovaná demo data — jen seed, v aplikaci se nepoužívají. */
 
@@ -77,7 +77,7 @@ export interface SubcategoryCatalog {
   items: string[]
   /** Rozsah ceny v Kč; null = cena typicky „dohodou“ / „v textu“ (práce, služby). */
   priceRange: [min: number, max: number] | null
-  icon: LucideIcon
+  icon: IconNode
 }
 
 export interface MainCategoryCatalog {
