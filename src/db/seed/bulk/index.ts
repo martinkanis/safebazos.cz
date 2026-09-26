@@ -14,7 +14,7 @@ async function main() {
     throw new Error(`Neplatný počet inzerátů: ${process.argv[2]}`)
   }
   const inserted = await seedBulkListings(total, log)
-  if (inserted === 0) log('Hromadná demo data už existují, přeskakuji.')
+  if (inserted === 0) log('Demo inzerátů je už dost, přeskakuji.')
 }
 
 main()

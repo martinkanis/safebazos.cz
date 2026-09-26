@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { hashPassword } from 'better-auth/crypto'
-import { count, like } from 'drizzle-orm'
+import { count, eq, like } from 'drizzle-orm'
 import type { PriceType } from '@/db/schema'
 import { getCategoryTree } from '@/features/categories/queries'
 import { listingColumnsFrom } from '@/features/listings/listing-columns'
@@ -82,10 +82,9 @@ async function createSellers(): Promise<string[]> {
       createdAt: new Date(now - random.integer(60, 900) * DAY_MS),
     }
   })
-  await getDb().insert(users).values(sellers)
-  await getDb()
-    .insert(accounts)
-    .values(
+  await getDb().transaction(async (tx) => {
+    await tx.insert(users).values(sellers)
+    await tx.insert(accounts).values(
       sellers.map((seller) => ({
         id: randomUUID(),
         accountId: seller.id,
@@ -94,7 +93,25 @@ async function createSellers(): Promise<string[]> {
         password: passwordHash,
       })),
     )
+  })
   return sellers.map((seller) => seller.id)
+}
+
+const isDemoSeller = like(users.email, `%@${SELLER_EMAIL_DOMAIN}`)
+
+/** Prodejci z předchozího (i přerušeného) běhu, jinak nově založení. */
+async function getOrCreateSellers(): Promise<string[]> {
+  const existing = await getDb().select({ id: users.id }).from(users).where(isDemoSeller)
+  return existing.length > 0 ? existing.map((seller) => seller.id) : createSellers()
+}
+
+async function countBulkListings(): Promise<number> {
+  const [row] = await getDb()
+    .select({ total: count() })
+    .from(listings)
+    .innerJoin(users, eq(users.id, listings.ownerUserId))
+    .where(isDemoSeller)
+  return row?.total ?? 0
 }
 
 /** Cena zaokrouhlená na „bazarově“ hezké číslo podle řádu. */
@@ -215,32 +232,33 @@ async function insertChunk(slots: CategorySlot[], sellerIds: string[]) {
         .returning({ id: listings.id })
       if (!created) throw new Error('Vložení demo inzerátu nevrátilo ID')
       if (listing.images.length === 0) continue
-      await tx
-        .insert(listingImages)
-        .values(
-          listing.images.map((image, index) => ({
-            ...image,
-            listingId: created.id,
-            sortOrder: index,
-          })),
-        )
+      await tx.insert(listingImages).values(
+        listing.images.map((image, index) => ({
+          ...image,
+          listingId: created.id,
+          sortOrder: index,
+        })),
+      )
     }
   })
 }
 
 export type ProgressReporter = (message: string) => void
 
-/** Vloží `total` demo inzerátů. Vrací počet vložených (0 = data už existují). */
+/**
+ * Doplní demo inzeráty do celkového počtu `total`. Navazuje na přerušený běh
+ * (restart podu během generování), takže je bezpečné ho volat při každém startu.
+ * Vrací počet nově vložených.
+ */
 export async function seedBulkListings(total: number, report: ProgressReporter): Promise<number> {
-  const [existing] = await getDb()
-    .select({ total: count() })
-    .from(users)
-    .where(like(users.email, `%@${SELLER_EMAIL_DOMAIN}`))
-  if ((existing?.total ?? 0) > 0) return 0
+  const remaining = total - (await countBulkListings())
+  if (remaining <= 0) return 0
 
-  const slots = await planCategorySlots(total)
-  const sellerIds = await createSellers()
-  report(`Prodejci: ${sellerIds.length} (heslo: ${DEMO_SELLER_PASSWORD})`)
+  const slots = await planCategorySlots(remaining)
+  const sellerIds = await getOrCreateSellers()
+  report(
+    `Prodejci: ${sellerIds.length} (heslo: ${DEMO_SELLER_PASSWORD}), zbývá ${remaining} inzerátů`,
+  )
 
   const startedAt = Date.now()
   for (let offset = 0; offset < slots.length; offset += CHUNK_SIZE) {

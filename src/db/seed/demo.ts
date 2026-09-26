@@ -25,7 +25,9 @@ export async function seedHandcraftedListings(): Promise<number> {
 
   const categoryIdByPath = await categoryIdsByPath()
   const sellerIds = await Promise.all(
-    DEMO_SELLERS.map((seller) => ensureCredentialUser({ ...seller, password: DEMO_SELLER_PASSWORD })),
+    DEMO_SELLERS.map((seller) =>
+      ensureCredentialUser({ ...seller, password: DEMO_SELLER_PASSWORD }),
+    ),
   )
   const now = Date.now()
   for (const demo of DEMO_LISTINGS) {
