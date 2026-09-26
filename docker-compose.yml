@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: safebazos-postgres
+    environment:
+      POSTGRES_USER: safebazos
+      POSTGRES_PASSWORD: safebazos
+      POSTGRES_DB: safebazos
+    ports:
+      - '5452:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U safebazos -d safebazos']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: safebazos-mailpit
+    ports:
+      - '1035:1025'
+      - '8035:8025'
+
+volumes:
+  postgres-data:
