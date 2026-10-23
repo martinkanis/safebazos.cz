@@ -1,7 +1,9 @@
-import { Eye, Pencil, RefreshCw, Trash2 } from 'lucide-react'
+import { ArrowUp, Eye, Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { Button, ButtonLink } from '@/components/ui/button'
 import { ConfirmSubmitButton } from '@/components/ui/confirm-submit-button'
+import { TopBadge } from '@/features/topping/top-badge'
+import { isTopped } from '@/features/topping/topping-rules'
 import { formatDate } from '@/lib/format-date'
 import { deleteListing, renewListing } from './actions'
 import { ListingStatusBadge } from './listing-status-badge'
@@ -13,6 +15,7 @@ import type { OwnListing } from './queries'
 
 export function OwnListingItem({ listing, now }: { listing: OwnListing; now: Date }) {
   const isExpired = listing.expiresAt <= now
+  const isActive = listing.status === 'active' && !isExpired
   const isRenewable = listing.status === 'active' && canRenewListing(listing.expiresAt, now)
 
   return (
@@ -28,6 +31,7 @@ export function OwnListingItem({ listing, now }: { listing: OwnListing; now: Dat
             {listing.title}
           </Link>
           <ListingStatusBadge status={listing.status} isExpired={isExpired} />
+          {isTopped(listing.topCount) && <TopBadge />}
         </div>
         <p className="flex flex-wrap gap-x-4 text-sm text-muted">
           <span className="font-medium text-ink">
@@ -40,9 +44,16 @@ export function OwnListingItem({ listing, now }: { listing: OwnListing; now: Dat
           <span>
             {isExpired ? 'Vypršel' : 'Vyprší'} {formatDate(listing.expiresAt)}
           </span>
+          {listing.topCount > 0 && <span>Topováno {listing.topCount}×</span>}
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
+        {isActive && (
+          <ButtonLink href={`/muj-ucet/inzerat/${listing.id}/topovat`} size="sm">
+            <ArrowUp className="size-3.5" aria-hidden />
+            Topovat
+          </ButtonLink>
+        )}
         {listing.status !== 'blocked' && (
           <ButtonLink
             href={`/muj-ucet/inzerat/${listing.id}/upravit`}

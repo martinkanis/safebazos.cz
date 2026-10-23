@@ -42,6 +42,7 @@ export interface ListingSummary {
   city: string
   postalCode: string
   publishedAt: Date
+  topCount: number
   viewCount: number
   acceptsSafePayment: boolean
   thumbnailKey: string | null
@@ -71,6 +72,7 @@ const listingSummaryColumns = {
   city: listings.city,
   postalCode: listings.postalCode,
   publishedAt: listings.publishedAt,
+  topCount: listings.topCount,
   viewCount: listings.viewCount,
   acceptsSafePayment: listings.acceptsSafePayment,
   thumbnailKey: firstThumbnailKey,
@@ -112,11 +114,12 @@ function buildFilterConditions(filters: ListingFilters): SQL[] {
 function orderByFor(sort: ListingSort): SQL[] {
   switch (sort) {
     case 'cheapest':
-      return [sql`${listings.priceAmount} asc nulls last`, desc(listings.publishedAt)]
+      return [sql`${listings.priceAmount} asc nulls last`, desc(listings.sortAt)]
     case 'priciest':
-      return [sql`${listings.priceAmount} desc nulls last`, desc(listings.publishedAt)]
+      return [sql`${listings.priceAmount} desc nulls last`, desc(listings.sortAt)]
     case 'newest':
-      return [desc(listings.publishedAt), desc(listings.id)]
+      // sortAt = čas vložení posunutý topováním — topované inzeráty jsou tak výš.
+      return [desc(listings.sortAt), desc(listings.id)]
   }
 }
 
@@ -190,6 +193,7 @@ export interface ListingDetail {
   riskSignals: ScamSignal[]
   viewCount: number
   publishedAt: Date
+  topCount: number
   expiresAt: Date
   images: ListingImage[]
 }
@@ -229,6 +233,7 @@ export async function getListingDetail(listingId: number): Promise<ListingDetail
       riskSignals: listings.riskSignals,
       viewCount: listings.viewCount,
       publishedAt: listings.publishedAt,
+      topCount: listings.topCount,
       expiresAt: listings.expiresAt,
     })
     .from(listings)
@@ -275,8 +280,10 @@ export interface OwnListing {
   priceType: PriceType
   priceAmount: number | null
   status: ListingStatus
+  categoryId: number
   viewCount: number
   publishedAt: Date
+  topCount: number
   expiresAt: Date
   thumbnailKey: string | null
 }
@@ -290,14 +297,16 @@ export function getOwnListings(userId: string): Promise<OwnListing[]> {
       priceType: listings.priceType,
       priceAmount: listings.priceAmount,
       status: listings.status,
+      categoryId: listings.categoryId,
       viewCount: listings.viewCount,
       publishedAt: listings.publishedAt,
+      topCount: listings.topCount,
       expiresAt: listings.expiresAt,
       thumbnailKey: firstThumbnailKey,
     })
     .from(listings)
     .where(and(eq(listings.ownerUserId, userId), ne(listings.status, 'deleted')))
-    .orderBy(desc(listings.publishedAt))
+    .orderBy(desc(listings.sortAt))
 }
 
 export interface EditableListing {
@@ -313,6 +322,7 @@ export interface EditableListing {
   city: string
   phone: string | null
   acceptsSafePayment: boolean
+  topCount: number
   expiresAt: Date
   images: ListingImage[]
 }
@@ -336,6 +346,7 @@ export async function getEditableListing(
       city: listings.city,
       phone: listings.phone,
       acceptsSafePayment: listings.acceptsSafePayment,
+      topCount: listings.topCount,
       expiresAt: listings.expiresAt,
     })
     .from(listings)

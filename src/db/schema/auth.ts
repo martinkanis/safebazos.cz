@@ -12,6 +12,9 @@ export const users = pgTable('users', {
   email: text().notNull().unique(),
   emailVerified: boolean().notNull().default(false),
   image: text(),
+  /** Ověřený telefon (E.164 bez +, např. 420777123456) — podmínka nákupu poukázek. */
+  phone: text(),
+  phoneVerifiedAt: timestamp({ withTimezone: true }),
   role: text().notNull().default('user'),
   banned: boolean().notNull().default(false),
   banReason: text(),

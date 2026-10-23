@@ -3,6 +3,7 @@ import Link from 'next/link'
 const FOOTER_LINKS = [
   { href: '/bezpecnost', label: 'Jak nakupovat bezpečně' },
   { href: '/bezpecna-platba', label: 'Bezpečná platba' },
+  { href: '/topovani', label: 'Topování' },
   { href: '/pridat-inzerat', label: 'Přidat inzerát' },
 ]
 

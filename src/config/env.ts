@@ -34,6 +34,27 @@ const envSchema = z.object({
 
   /** Počet generovaných demo inzerátů, které se při startu doplní na pozadí (0 = žádné). */
   SEED_DEMO_LISTINGS: z.coerce.number().int().min(0).default(0),
+
+  /**
+   * Platby poukázek. Výchozí je ostrý Comgate; `fake` (simulace = poukázky zdarma)
+   * se zapíná jen explicitně v lokálním .env.
+   */
+  PAYMENT_PROVIDER: z.enum(['comgate', 'fake']).default('comgate'),
+  COMGATE_MERCHANT_ID: z.string().optional(),
+  COMGATE_SECRET: z.string().optional(),
+  /** Testovací režim Comgate — platby se neprovádějí doopravdy. */
+  COMGATE_TEST: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+
+  /** SMS pro ověření telefonu. Výchozí BulkGate; `log` (kód jen do logu) jen pro lokální vývoj. */
+  SMS_PROVIDER: z.enum(['bulkgate', 'log']).default('bulkgate'),
+  BULKGATE_APPLICATION_ID: z.string().optional(),
+  BULKGATE_APPLICATION_TOKEN: z.string().optional(),
+  /** Odesílatel SMS v BulkGate (sender_id); výchozí gSystem = systémové číslo BulkGate. */
+  BULKGATE_SENDER_ID: z.string().default('gSystem'),
+  BULKGATE_SENDER_VALUE: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>

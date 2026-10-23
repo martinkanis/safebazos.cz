@@ -51,6 +51,7 @@ export async function seedHandcraftedListings(): Promise<number> {
       }),
       ownerUserId,
       publishedAt,
+      sortAt: publishedAt,
       expiresAt: listingExpiryFrom(publishedAt),
     })
   }

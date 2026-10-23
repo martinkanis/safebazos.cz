@@ -16,6 +16,7 @@ import { storeListingImages, validateImageFiles, type StoredImage } from './imag
 import { listingColumnsFrom } from './listing-columns'
 import { listingInputSchema, type ListingFieldErrors, type ListingInput } from './listing-input'
 import { listingPath } from './paths'
+import { sortTimeFor } from '@/features/topping/topping-rules'
 import { canRenewListing, listingExpiryFrom } from './publication'
 import { getEditableListing } from './queries'
 
@@ -112,20 +113,19 @@ export async function createListing(
         ...columns,
         ownerUserId: user.id,
         publishedAt,
+        sortAt: publishedAt,
         expiresAt: listingExpiryFrom(publishedAt),
       })
       .returning({ id: listings.id })
     if (!created) throw new Error(`Vložení inzerátu uživatele ${user.id} nevrátilo ID`)
     if (stored.images.length > 0) {
-      await tx
-        .insert(listingImages)
-        .values(
-          stored.images.map((image, index) => ({
-            ...image,
-            listingId: created.id,
-            sortOrder: index,
-          })),
-        )
+      await tx.insert(listingImages).values(
+        stored.images.map((image, index) => ({
+          ...image,
+          listingId: created.id,
+          sortOrder: index,
+        })),
+      )
     }
     return created.id
   })
@@ -221,7 +221,11 @@ export async function renewListing(listingId: number): Promise<void> {
 
   await getDb()
     .update(listings)
-    .set({ publishedAt: now, expiresAt: listingExpiryFrom(now) })
+    .set({
+      publishedAt: now,
+      sortAt: sortTimeFor(now, listing.topCount),
+      expiresAt: listingExpiryFrom(now),
+    })
     .where(eq(listings.id, listingId))
   revalidatePath('/muj-ucet')
 }

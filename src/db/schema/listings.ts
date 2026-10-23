@@ -43,20 +43,27 @@ export const listings = pgTable(
 
     status: listingStatusEnum().notNull().default('active'),
     riskLevel: riskLevelEnum().notNull().default('none'),
-    riskSignals: scamSignalEnum().array().notNull().default(sql`'{}'`),
+    riskSignals: scamSignalEnum()
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
 
     /** Normalizovaný text (malá písmena, bez diakritiky) pro trigramové vyhledávání. */
     searchText: text().notNull(),
     viewCount: integer().notNull().default(0),
 
     publishedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    /** Kolikrát byl inzerát topován (viz features/topping/topping-rules). */
+    topCount: smallint().notNull().default(0),
+    /** Čas pro řazení „nejnovější“: publishedAt posunutý o topování dopředu. */
+    sortAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     expiresAt: timestamp({ withTimezone: true }).notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (table) => [
-    index().on(table.categoryId, table.status, table.publishedAt.desc()),
-    index().on(table.status, table.publishedAt.desc()),
+    index().on(table.categoryId, table.status, table.sortAt.desc()),
+    index().on(table.status, table.sortAt.desc()),
     index().on(table.ownerUserId),
     index().on(table.postalCode),
     index().on(table.cityNormalized),

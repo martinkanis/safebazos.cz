@@ -217,6 +217,7 @@ async function insertChunk(slots: CategorySlot[], sellerIds: string[]) {
         ownerUserId: random.pick(sellerIds),
         viewCount: Math.floor(random.next() ** 2 * 600),
         publishedAt,
+        sortAt: publishedAt,
         expiresAt: listingExpiryFrom(publishedAt),
       }
       const images = await generateListingImages(slot.sub.icon, hue, imageCountFor(slot), random)

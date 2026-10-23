@@ -66,6 +66,13 @@ async function runStartupTasks(): Promise<void> {
     }
   })
 
+  if (env.PAYMENT_PROVIDER === 'fake' || env.SMS_PROVIDER === 'log') {
+    logger.warn(
+      { paymentProvider: env.PAYMENT_PROVIDER, smsProvider: env.SMS_PROVIDER },
+      'Simulované platby/SMS — jen pro lokální vývoj, poukázky jsou zdarma!',
+    )
+  }
+
   if (env.SEED_DEMO_LISTINGS > 0) {
     // Generování fotek trvá minuty — nesmí blokovat start serveru.
     void seedDemoData(env.SEED_DEMO_LISTINGS).catch((error: unknown) => {

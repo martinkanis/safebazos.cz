@@ -1,5 +1,7 @@
 import { Eye, MapPin } from 'lucide-react'
 import Link from 'next/link'
+import { TopBadge } from '@/features/topping/top-badge'
+import { isTopped } from '@/features/topping/topping-rules'
 import { formatDate } from '@/lib/format-date'
 import { formatPostalCode, truncateText } from '@/lib/text'
 import { ListingThumbnail } from './listing-thumbnail'
@@ -22,6 +24,7 @@ export function ListingRow({ listing }: { listing: ListingSummary }) {
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:gap-4">
         <div className="min-w-0 flex-1 space-y-1.5">
           <h3 className="text-base font-semibold leading-snug">
+            {isTopped(listing.topCount) && <TopBadge className="mr-1.5 align-text-bottom" />}
             <Link href={href} className="after:absolute after:inset-0 hover:text-brand-700">
               {listing.title}
             </Link>

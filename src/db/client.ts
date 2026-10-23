@@ -4,6 +4,7 @@ import { loadEnv } from '@/config/env'
 import * as schema from './schema'
 
 export type Database = ReturnType<typeof createDb>
+export type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0]
 
 let pool: Pool | null = null
 let db: Database | null = null

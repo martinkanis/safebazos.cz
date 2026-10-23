@@ -8,7 +8,13 @@ export const listingStatusEnum = pgEnum('listing_status', [
 ])
 export type ListingStatus = (typeof listingStatusEnum.enumValues)[number]
 
-export const priceTypeEnum = pgEnum('price_type', ['amount', 'negotiable', 'offer', 'free', 'in_text'])
+export const priceTypeEnum = pgEnum('price_type', [
+  'amount',
+  'negotiable',
+  'offer',
+  'free',
+  'in_text',
+])
 export type PriceType = (typeof priceTypeEnum.enumValues)[number]
 
 export const riskLevelEnum = pgEnum('risk_level', ['none', 'warning', 'high'])
@@ -37,3 +43,9 @@ export type ReportReason = (typeof reportReasonEnum.enumValues)[number]
 
 export const reportStatusEnum = pgEnum('report_status', ['open', 'resolved', 'dismissed'])
 export type ReportStatus = (typeof reportStatusEnum.enumValues)[number]
+
+export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'paid', 'cancelled'])
+export type PaymentStatus = (typeof paymentStatusEnum.enumValues)[number]
+
+export const voucherStatusEnum = pgEnum('voucher_status', ['available', 'used'])
+export type VoucherStatus = (typeof voucherStatusEnum.enumValues)[number]

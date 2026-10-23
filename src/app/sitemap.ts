@@ -17,9 +17,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getSitemapListings(MAX_SITEMAP_LISTINGS),
   ])
 
-  const staticPages: MetadataRoute.Sitemap = ['/', '/bezpecnost', '/bezpecna-platba'].map(
-    (path) => ({ url: `${appUrl}${path}`, changeFrequency: 'daily' }),
-  )
+  const staticPages: MetadataRoute.Sitemap = [
+    '/',
+    '/bezpecnost',
+    '/bezpecna-platba',
+    '/topovani',
+  ].map((path) => ({ url: `${appUrl}${path}`, changeFrequency: 'daily' }))
   const categoryPages: MetadataRoute.Sitemap = categoryTree.flatMap((main) => [
     { url: `${appUrl}${categoryPath(main)}`, changeFrequency: 'hourly' as const },
     ...main.subcategories.map((sub) => ({

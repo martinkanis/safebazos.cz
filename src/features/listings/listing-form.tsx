@@ -21,7 +21,7 @@ import { ListingThumbnail } from './listing-thumbnail'
 import { PRICE_TYPE_OPTIONS } from './price'
 import type { EditableListing } from './queries'
 
-type ListingFormValues = Omit<EditableListing, 'id' | 'slug' | 'status' | 'expiresAt'>
+type ListingFormValues = Omit<EditableListing, 'id' | 'slug' | 'status' | 'expiresAt' | 'topCount'>
 
 interface ListingFormProps {
   action: (state: ListingFormState, formData: FormData) => Promise<ListingFormState>

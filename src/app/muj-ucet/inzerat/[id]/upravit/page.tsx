@@ -23,7 +23,7 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
     return <Alert tone="danger">Zablokovaný inzerát nelze upravovat.</Alert>
   }
 
-  const { id, slug, status, expiresAt, ...initialValues } = listing
+  const { id, slug, status, expiresAt, topCount, ...initialValues } = listing
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <h2 className="text-xl font-bold">Upravit inzerát</h2>

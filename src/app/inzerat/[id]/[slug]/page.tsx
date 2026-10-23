@@ -1,10 +1,11 @@
-import { Eye, MapPin } from 'lucide-react'
+import { ArrowUp, Eye, MapPin } from 'lucide-react'
 import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
 import { after } from 'next/server'
 import { cache } from 'react'
 import { Breadcrumbs } from '@/components/layout/breadcrumbs'
 import { Alert } from '@/components/ui/alert'
+import { ButtonLink } from '@/components/ui/button'
 import { JsonLd } from '@/components/ui/json-ld'
 import { loadEnv } from '@/config/env'
 import { categoryPath, findSubcategoryById } from '@/features/categories/queries'
@@ -179,6 +180,16 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
             </div>
             {seller && <SellerCard seller={seller} />}
             <ListingContact listing={listing} viewer={viewer} />
+            {isOwner && isPublic && (
+              <ButtonLink
+                href={`/muj-ucet/inzerat/${listing.id}/topovat`}
+                variant="secondary"
+                className="w-full"
+              >
+                <ArrowUp className="size-4" aria-hidden />
+                Topovat inzerát
+              </ButtonLink>
+            )}
           </div>
           {listing.acceptsSafePayment ? <SafePaymentOffer /> : <SafetyTipsBox />}
         </aside>
