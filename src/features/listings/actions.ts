@@ -7,6 +7,7 @@ import type { z } from 'zod'
 import { getDb } from '@/db/client'
 import { listingImages, listings } from '@/db/schema'
 import { findSubcategoryById } from '@/features/categories/queries'
+import { markClaimImported, resolveImportForPublish } from '@/features/listing-import/publish'
 import { formFiles, formString } from '@/lib/form'
 import { createLogger } from '@/lib/logger'
 import { requireUser } from '@/lib/require-user'
@@ -98,11 +99,17 @@ export async function createListing(
     )
   }
 
+  const importResolution = await resolveImportForPublish(formData, user.id)
+  if (!importResolution.isValid) return formError(importResolution.message)
+  const { importForPublish } = importResolution
+  const importedImages = importForPublish?.keptImages ?? []
+
   const files = formFiles(formData, 'images')
-  const imageError = validateImageFiles(files, 0)
+  const imageError = validateImageFiles(files, importedImages.length)
   if (imageError) return formError(imageError)
   const stored = await storeImagesOrError(files)
   if ('error' in stored) return stored.error
+  const images = [...importedImages, ...stored.images]
 
   const publishedAt = new Date()
   const columns = listingColumnsFrom(input)
@@ -118,19 +125,28 @@ export async function createListing(
       })
       .returning({ id: listings.id })
     if (!created) throw new Error(`Vložení inzerátu uživatele ${user.id} nevrátilo ID`)
-    if (stored.images.length > 0) {
+    if (images.length > 0) {
       await tx.insert(listingImages).values(
-        stored.images.map((image, index) => ({
+        images.map((image, index) => ({
           ...image,
           listingId: created.id,
           sortOrder: index,
         })),
       )
     }
+    if (importForPublish) await markClaimImported(tx, importForPublish.claimId, created.id)
     return created.id
   })
+  if (importForPublish?.discardedImages.length) {
+    await deleteObjects(
+      importForPublish.discardedImages.flatMap((image) => [image.storageKey, image.thumbnailKey]),
+    )
+  }
 
-  logger.info({ listingId, userId: user.id, status: columns.status }, 'Inzerát vytvořen')
+  logger.info(
+    { listingId, userId: user.id, status: columns.status, importClaimId: importForPublish?.claimId },
+    'Inzerát vytvořen',
+  )
   redirect(`${listingPath({ id: listingId, slug: columns.slug })}?stav=novy`)
 }
 

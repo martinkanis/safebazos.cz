@@ -1,7 +1,7 @@
 'use client'
 
 import { ShieldCheck } from 'lucide-react'
-import { useActionState, useState, useTransition, type FormEvent } from 'react'
+import { useActionState, useState, useTransition, type FormEvent, type ReactNode } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { FormField, Input, Select, Textarea } from '@/components/ui/form-field'
@@ -21,13 +21,19 @@ import { ListingThumbnail } from './listing-thumbnail'
 import { PRICE_TYPE_OPTIONS } from './price'
 import type { EditableListing } from './queries'
 
-type ListingFormValues = Omit<EditableListing, 'id' | 'slug' | 'status' | 'expiresAt' | 'topCount'>
+/** Hodnoty k předvyplnění. Kategorie může chybět (např. u převzatého inzerátu bez shody). */
+export type ListingFormValues = Omit<
+  EditableListing,
+  'id' | 'slug' | 'status' | 'expiresAt' | 'topCount' | 'categoryId'
+> & { categoryId: number | null }
 
 interface ListingFormProps {
   action: (state: ListingFormState, formData: FormData) => Promise<ListingFormState>
   categoryTree: MainCategory[]
   initialValues?: ListingFormValues
   submitLabel: string
+  /** Doplňková pole uvnitř formuláře, před odesláním (např. převzetí inzerátu). */
+  children?: ReactNode
 }
 
 function errorProps(fieldErrors: ListingFieldErrors, field: keyof ListingFieldErrors, id: string) {
@@ -40,6 +46,7 @@ export function ListingForm({
   categoryTree,
   initialValues,
   submitLabel,
+  children,
 }: ListingFormProps) {
   const [state, formAction] = useActionState(action, INITIAL_LISTING_FORM_STATE)
   const [isPending, startTransition] = useTransition()
@@ -259,6 +266,8 @@ export function ListingForm({
           </span>
         </label>
       </fieldset>
+
+      {children}
 
       <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
         {isPending ? 'Ukládám…' : submitLabel}

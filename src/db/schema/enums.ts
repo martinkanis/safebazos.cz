@@ -49,3 +49,6 @@ export type PaymentStatus = (typeof paymentStatusEnum.enumValues)[number]
 
 export const voucherStatusEnum = pgEnum('voucher_status', ['available', 'used'])
 export type VoucherStatus = (typeof voucherStatusEnum.enumValues)[number]
+
+export const importClaimStatusEnum = pgEnum('import_claim_status', ['pending', 'verified', 'imported'])
+export type ImportClaimStatus = (typeof importClaimStatusEnum.enumValues)[number]

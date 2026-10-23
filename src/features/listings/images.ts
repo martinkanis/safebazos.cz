@@ -50,11 +50,11 @@ async function encodeImage(input: Buffer) {
   return { full, thumbnail }
 }
 
-/** Zpracuje a uloží fotky. Klíče nezávisí na ID inzerátu, takže jde uložit před zápisem do DB. */
-export async function storeListingImages(files: File[]): Promise<StoredImage[]> {
+/** Překóduje a uloží fotky z bufferů. Klíče nezávisí na ID inzerátu, takže jde uložit před zápisem do DB. */
+export async function storeImageBuffers(inputs: Buffer[]): Promise<StoredImage[]> {
   const stored: StoredImage[] = []
-  for (const file of files) {
-    const { full, thumbnail } = await encodeImage(Buffer.from(await file.arrayBuffer()))
+  for (const input of inputs) {
+    const { full, thumbnail } = await encodeImage(input)
     const baseKey = `listings/${randomUUID()}`
     const image: StoredImage = {
       storageKey: `${baseKey}.webp`,
@@ -67,4 +67,10 @@ export async function storeListingImages(files: File[]): Promise<StoredImage[]> 
     stored.push(image)
   }
   return stored
+}
+
+/** Zpracuje a uloží fotky nahrané ve formuláři. */
+export async function storeListingImages(files: File[]): Promise<StoredImage[]> {
+  const buffers = await Promise.all(files.map(async (file) => Buffer.from(await file.arrayBuffer())))
+  return storeImageBuffers(buffers)
 }
