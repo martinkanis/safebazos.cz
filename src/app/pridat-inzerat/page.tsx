@@ -5,7 +5,9 @@ import { isAiListingEnabled } from '@/features/ai-listing/ai-config'
 import { OneClickListing } from '@/features/ai-listing/one-click-listing'
 import { getCategoryTree } from '@/features/categories/queries'
 import { createListing } from '@/features/listings/actions'
+import { newListingFormValues } from '@/features/listings/form-defaults'
 import { ListingForm } from '@/features/listings/listing-form'
+import { getLastListingContact } from '@/features/listings/queries'
 import { requireUser } from '@/lib/require-user'
 
 export const metadata: Metadata = {
@@ -14,8 +16,11 @@ export const metadata: Metadata = {
 }
 
 export default async function CreateListingPage() {
-  await requireUser('/pridat-inzerat')
-  const categoryTree = await getCategoryTree()
+  const user = await requireUser('/pridat-inzerat')
+  const [categoryTree, contactDefaults] = await Promise.all([
+    getCategoryTree(),
+    getLastListingContact(user.id),
+  ])
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
@@ -33,11 +38,16 @@ export default async function CreateListingPage() {
         </span>
       </Link>
       {isAiListingEnabled() ? (
-        <OneClickListing action={createListing} categoryTree={categoryTree} />
+        <OneClickListing
+          action={createListing}
+          categoryTree={categoryTree}
+          contactDefaults={contactDefaults}
+        />
       ) : (
         <ListingForm
           action={createListing}
           categoryTree={categoryTree}
+          initialValues={newListingFormValues(contactDefaults)}
           submitLabel="Zveřejnit inzerát"
         />
       )}

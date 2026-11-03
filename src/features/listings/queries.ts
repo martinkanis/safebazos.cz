@@ -376,3 +376,22 @@ export function getSitemapListings(limit: number): Promise<SitemapListing[]> {
     .orderBy(desc(listings.publishedAt))
     .limit(limit)
 }
+
+export interface ListingContactDefaults {
+  postalCode: string
+  city: string
+  phone: string | null
+}
+
+/** Lokalita a telefon z posledního inzerátu — předvyplní se do nového, ať je nemusí psát znovu. */
+export async function getLastListingContact(
+  userId: string,
+): Promise<ListingContactDefaults | null> {
+  const [row] = await getDb()
+    .select({ postalCode: listings.postalCode, city: listings.city, phone: listings.phone })
+    .from(listings)
+    .where(and(eq(listings.ownerUserId, userId), ne(listings.status, 'deleted')))
+    .orderBy(desc(listings.createdAt))
+    .limit(1)
+  return row ?? null
+}

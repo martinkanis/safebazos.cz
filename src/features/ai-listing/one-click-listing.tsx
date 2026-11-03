@@ -6,7 +6,9 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import type { MainCategory } from '@/features/categories/queries'
 import type { ListingFormState } from '@/features/listings/form-state'
+import { newListingFormValues } from '@/features/listings/form-defaults'
 import { ListingForm, type ListingFormValues } from '@/features/listings/listing-form'
+import type { ListingContactDefaults } from '@/features/listings/queries'
 import { MAX_IMAGES_PER_LISTING } from '@/features/listings/listing-limits'
 import { suggestListingFromPhotosAction } from './actions'
 import { MAX_AI_PHOTOS } from './ai-config'
@@ -22,6 +24,8 @@ type Phase =
 interface OneClickListingProps {
   action: (state: ListingFormState, formData: FormData) => Promise<ListingFormState>
   categoryTree: MainCategory[]
+  /** Lokalita a telefon z posledního inzerátu prodejce. */
+  contactDefaults: ListingContactDefaults | null
 }
 
 const CONFIDENCE_LABELS: Record<ListingSuggestion['priceConfidence'], string> = {
@@ -36,18 +40,17 @@ const priceFormatter = new Intl.NumberFormat('cs-CZ', {
   maximumFractionDigits: 0,
 })
 
-function suggestionToFormValues(suggestion: ListingSuggestion): ListingFormValues {
+function suggestionToFormValues(
+  suggestion: ListingSuggestion,
+  contact: ListingContactDefaults | null,
+): ListingFormValues {
   return {
+    ...newListingFormValues(contact),
     categoryId: suggestion.categoryId,
     title: suggestion.title,
     description: suggestion.description,
     priceType: suggestion.suggestedPriceCzk ? 'amount' : 'negotiable',
     priceAmount: suggestion.suggestedPriceCzk,
-    postalCode: '',
-    city: '',
-    phone: null,
-    acceptsSafePayment: true,
-    images: [],
   }
 }
 
@@ -79,7 +82,7 @@ function SuggestionSummary({ suggestion }: { suggestion: ListingSuggestion }) {
 }
 
 /** Inzerát na 1 klik: vyfotit → AI navrhne inzerát → zkontrolovat → zveřejnit. */
-export function OneClickListing({ action, categoryTree }: OneClickListingProps) {
+export function OneClickListing({ action, categoryTree, contactDefaults }: OneClickListingProps) {
   const [phase, setPhase] = useState<Phase>({ step: 'pick' })
   const [photos, setPhotos] = useState<File[]>([])
   const [, startTransition] = useTransition()
@@ -124,7 +127,9 @@ export function OneClickListing({ action, categoryTree }: OneClickListingProps) 
           action={action}
           categoryTree={categoryTree}
           initialValues={
-            phase.step === 'review' ? suggestionToFormValues(phase.suggestion) : undefined
+            phase.step === 'review'
+              ? suggestionToFormValues(phase.suggestion, contactDefaults)
+              : newListingFormValues(contactDefaults)
           }
           initialFiles={photos}
           submitLabel="Zveřejnit inzerát"
