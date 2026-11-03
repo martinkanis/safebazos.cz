@@ -55,6 +55,11 @@ const envSchema = z.object({
   /** Odesílatel SMS v BulkGate (sender_id); výchozí gSystem = systémové číslo BulkGate. */
   BULKGATE_SENDER_ID: z.string().default('gSystem'),
   BULKGATE_SENDER_VALUE: z.string().optional(),
+
+  /** AI návrh inzerátu z fotek. Bez klíče se funkce v UI nenabízí. */
+  ANTHROPIC_API_KEY: z.string().optional(),
+  AI_LISTING_MODEL: z.string().default('claude-sonnet-5-5'),
+  AI_LISTING_EFFORT: z.enum(['low', 'medium', 'high']).default('medium'),
 })
 
 export type Env = z.infer<typeof envSchema>

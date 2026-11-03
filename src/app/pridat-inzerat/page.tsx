@@ -1,6 +1,8 @@
 import { Download } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { isAiListingEnabled } from '@/features/ai-listing/ai-config'
+import { OneClickListing } from '@/features/ai-listing/one-click-listing'
 import { getCategoryTree } from '@/features/categories/queries'
 import { createListing } from '@/features/listings/actions'
 import { ListingForm } from '@/features/listings/listing-form'
@@ -30,11 +32,15 @@ export default async function CreateListingPage() {
           vyplňovat znovu.
         </span>
       </Link>
-      <ListingForm
-        action={createListing}
-        categoryTree={categoryTree}
-        submitLabel="Zveřejnit inzerát"
-      />
+      {isAiListingEnabled() ? (
+        <OneClickListing action={createListing} categoryTree={categoryTree} />
+      ) : (
+        <ListingForm
+          action={createListing}
+          categoryTree={categoryTree}
+          submitLabel="Zveřejnit inzerát"
+        />
+      )}
     </div>
   )
 }

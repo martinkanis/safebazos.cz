@@ -1,7 +1,15 @@
 'use client'
 
 import { ShieldCheck } from 'lucide-react'
-import { useActionState, useState, useTransition, type FormEvent, type ReactNode } from 'react'
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { FormField, Input, Select, Textarea } from '@/components/ui/form-field'
@@ -34,6 +42,8 @@ interface ListingFormProps {
   submitLabel: string
   /** Doplňková pole uvnitř formuláře, před odesláním (např. převzetí inzerátu). */
   children?: ReactNode
+  /** Fotky vybrané dřív (např. pro AI návrh) — vloží se do pole pro nahrání fotek. */
+  initialFiles?: File[]
 }
 
 function errorProps(fieldErrors: ListingFieldErrors, field: keyof ListingFieldErrors, id: string) {
@@ -47,7 +57,16 @@ export function ListingForm({
   initialValues,
   submitLabel,
   children,
+  initialFiles,
 }: ListingFormProps) {
+  const imagesInputRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const input = imagesInputRef.current
+    if (!input || !initialFiles?.length) return
+    const transfer = new DataTransfer()
+    initialFiles.forEach((file) => transfer.items.add(file))
+    input.files = transfer.files
+  }, [initialFiles])
   const [state, formAction] = useActionState(action, INITIAL_LISTING_FORM_STATE)
   const [isPending, startTransition] = useTransition()
   const [priceType, setPriceType] = useState<PriceType>(initialValues?.priceType ?? 'amount')
@@ -237,6 +256,7 @@ export function ListingForm({
           hint={`JPG, PNG nebo WebP, nejvýše ${MAX_IMAGES_PER_LISTING} fotek po 10 MB. Polohu z fotek (GPS) automaticky mažeme.`}
         >
           <input
+            ref={imagesInputRef}
             id="images"
             name="images"
             type="file"

@@ -22,6 +22,7 @@
     "db:seed:bulk": "tsx --env-file=.env src/db/seed/bulk/index.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.4.0",
     "@aws-sdk/client-s3": "^3.1141.0",
     "better-auth": "^1.7.6",
     "clsx": "^2.1.1",

@@ -52,3 +52,11 @@ export type VoucherStatus = (typeof voucherStatusEnum.enumValues)[number]
 
 export const importClaimStatusEnum = pgEnum('import_claim_status', ['pending', 'verified', 'imported'])
 export type ImportClaimStatus = (typeof importClaimStatusEnum.enumValues)[number]
+
+export const aiSuggestionStatusEnum = pgEnum('ai_suggestion_status', [
+  'succeeded',
+  'not_sellable',
+  'refused',
+  'failed',
+])
+export type AiSuggestionStatus = (typeof aiSuggestionStatusEnum.enumValues)[number]
